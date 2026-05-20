@@ -14,6 +14,8 @@ cd ialttab-cachyos-kdeplasma
 ./install.sh
 ```
 
+The installer also configures [keyd](https://github.com/rvaiya/keyd) to remap **CapsLock** to F19 on tap (and Ctrl on hold), so you can trigger the switcher with CapsLock without losing CapsLock's usefulness as a modifier. If `/etc/keyd/default.conf` already exists, the installer skips this step and tells you to add `capslock = overload(control, f19)` to your `[main]` section yourself.
+
 Then check:
 
 ```text
@@ -28,6 +30,7 @@ Default shortcut is `F19`.
 ```text
 F19              open/close
 Type             filter by title/class/app-id
+1-9              activate Nth visible entry
 Enter            activate selection
 Escape           close without switching
 Tab/Down/Right   next
@@ -47,19 +50,3 @@ When opened with an empty search, the initial selection is the previous MRU wind
 The first run after installing has only a stacking-order fallback for older windows. After the effect is enabled, it maintains MRU order using KWin's `Workspace.windowActivated` signal.
 
 If edits do not appear immediately, disable/enable the effect or log out/in; KWin may cache loaded QML.
-
-
-## v0.2 changes
-
-- Shows the switcher panel only on the active KWin screen at the moment the shortcut is pressed.
-- Removes the dark full-screen overlay/dim by default.
-- If you want a subtle active-monitor shade, edit `contents/ui/main.qml` and set:
-
-```qml
-readonly property real backgroundDim: 0.18
-```
-
-## v0.3 changes
-
-- Fixes non-active screens blacking out when the switcher is open. The delegate root is now an `Item` instead of a `Rectangle`, so KWin does not clear inactive screen framebuffers to black.
-

@@ -39,12 +39,9 @@ SceneEffect {
 
     // SceneEffect creates one delegate per physical/logical screen.
     // Keep the switcher visually active on only the screen that was active
-    // at the moment the shortcut was pressed.
+    // at the moment the shortcut was pressed; other delegates stay hidden
+    // so KWin does not repaint the inactive screens.
     property string targetScreenKey: ""
-
-    // 0.0 = no desktop dimming. Set to e.g. 0.18 if you want a subtle shade
-    // behind the panel on the active monitor only.
-    readonly property real backgroundDim: 0.0
 
 
     function safeString(value) {
@@ -398,13 +395,11 @@ SceneEffect {
         id: screenRoot
         readonly property bool targetScreen: effect.isTargetScreen(SceneView.screen)
 
+        // Hide non-target delegates entirely so KWin does not composite or
+        // clear those screens. Keeps inactive monitors untouched and avoids
+        // the brief blackout when the effect activates.
+        visible: targetScreen
         focus: targetScreen
-
-        Rectangle {
-            anchors.fill: parent
-            visible: screenRoot.targetScreen && effect.backgroundDim > 0
-            color: Qt.rgba(0, 0, 0, effect.backgroundDim)
-        }
 
         readonly property int rowsShown: Math.max(1, Math.min(effect.shownWindows.length, effect.maxVisibleRows))
         readonly property int panelWidth: Math.round(Math.min(Math.max(Kirigami.Units.gridUnit * 48, width * 0.42), width * 0.82))
@@ -513,6 +508,18 @@ SceneEffect {
 
             if (event.key === Qt.Key_End) {
                 effect.selectedIndex = Math.max(0, effect.shownWindows.length - 1);
+                event.accepted = true;
+                return;
+            }
+
+            // Number-key quick pick: 1..9 always activates the Nth visible entry.
+            if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9
+                    && (event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier | Qt.ShiftModifier)) === 0) {
+                const idx = event.key - Qt.Key_1;
+                if (idx < effect.shownWindows.length) {
+                    effect.selectedIndex = idx;
+                    effect.activateSelected();
+                }
                 event.accepted = true;
                 return;
             }
