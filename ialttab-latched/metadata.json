@@ -1,0 +1,19 @@
+{
+  "KPackageStructure": "KWin/Effect",
+  "KPlugin": {
+    "Authors": [
+      {
+        "Email": "shaltiel@nagish.com",
+        "Name": "Shaltiel Shmidman"
+      }
+    ],
+    "Category": "Window Management",
+    "Description": "One-shot iAltTab-style searchable MRU window switcher for KDE Plasma Wayland. v0.3 fixes non-active screens blacking out.",
+    "EnabledByDefault": false,
+    "Id": "ialttab-latched",
+    "License": "MIT",
+    "Name": "iAltTab Latched Search"
+  },
+  "X-KDE-Ordering": 60,
+  "X-Plasma-API": "declarativescript"
+}
