@@ -55,6 +55,44 @@ SceneEffect {
         return safeString(value).toLowerCase();
     }
 
+    // Per-app display rewrites. These drive BOTH the row display AND the search
+    // haystack (see searchableText below) — when chrome- is stripped from a PWA,
+    // typing "chrome" must not match it. Add new rules here in one place.
+    function displayTitle(w) {
+        if (!w) {
+            return "";
+        }
+        let title = safeString(w.caption);
+        const cls = safeLower(w.resourceClass);
+
+        // Dolphin: prefix with "Opus" so the file manager surfaces on "opus" searches.
+        if (cls === "dolphin" || cls === "org.kde.dolphin") {
+            title = "Opus " + title;
+        }
+
+        return title;
+    }
+
+    function displayClass(w) {
+        if (!w) {
+            return "";
+        }
+        let cls = safeString(w.resourceClass || w.desktopFileName || w.resourceName);
+        const lower = cls.toLowerCase();
+
+        if (lower.indexOf("chrome-") === 0) {
+            // Chrome PWAs (e.g. WhatsApp Web is chrome-web.whatsapp.com…): drop the
+            // "chrome-" prefix so they read cleanly and don't pollute "chrome" searches.
+            cls = cls.slice("chrome-".length);
+        } else if (lower === "chromium") {
+            // Real Chromium browser windows: tag with "chrome-" so they DO surface
+            // on "chrome" searches (the inverse of the PWA rule above).
+            cls = "chrome-" + cls;
+        }
+
+        return cls;
+    }
+
     function screenKey(output) {
         if (!output) {
             return "";
@@ -206,7 +244,8 @@ SceneEffect {
     }
 
     function searchableText(w) {
-        return safeLower(w.resourceClass + " " + w.resourceName + " " + w.desktopFileName + " " + w.caption);
+        // Display rewrites are the source of truth for search too — see displayTitle/displayClass.
+        return safeLower(displayTitle(w) + " " + displayClass(w));
     }
 
     function windowMatches(w) {
@@ -603,8 +642,8 @@ SceneEffect {
                         id: rowItem
                         readonly property var win: effect.shownWindows[index]
                         readonly property bool current: index === effect.selectedIndex
-                        readonly property string classText: effect.safeString(win ? (win.resourceClass || win.desktopFileName || win.resourceName) : "")
-                        readonly property string titleText: effect.safeString(win ? win.caption : "")
+                        readonly property string classText: win ? effect.displayClass(win) : ""
+                        readonly property string titleText: win ? effect.displayTitle(win) : ""
                         readonly property bool isMinimized: win ? win.minimized === true : false
                         readonly property bool canClose: win ? win.closeable === true : false
 
